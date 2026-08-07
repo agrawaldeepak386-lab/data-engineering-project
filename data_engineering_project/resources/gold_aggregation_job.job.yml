@@ -1,0 +1,41 @@
+resources:
+  jobs:
+    gold_aggregation_job:
+      name: gold_aggregation_job
+      tasks:
+        - task_key: customer_last_purchase
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/customer_last_purchase.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: customer_metrics
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/customer_metrics.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: daily_kpis
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/daily_kpis.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: product_analytics
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/product_analytics.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: sales_summary
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/sales_summary.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      performance_target: PERFORMANCE_OPTIMIZED

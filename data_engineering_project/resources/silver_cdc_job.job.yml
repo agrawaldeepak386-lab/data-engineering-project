@@ -1,0 +1,35 @@
+resources:
+  jobs:
+    silver_cdc_job:
+      name: silver_cdc_job
+      tasks:
+        - task_key: Sales_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/Sales.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: Supplier_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/suppliers.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: customer_clean_scd1
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/scd_type1_customers.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+        - task_key: products_clean_scd2
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/scd_type2_products.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      performance_target: PERFORMANCE_OPTIMIZED

@@ -1,0 +1,72 @@
+resources:
+  jobs:
+    bronze_ingestion_job:
+      name: bronze_ingestion_job
+      tasks:
+        - task_key: Customer_data
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_customers.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: products_data
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_products.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: sales_data
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_sales.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: supplier_data
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_suppliers.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: ingestion_to_bronze
+          depends_on:
+            - task_key: supplier_data
+            - task_key: Customer_data
+            - task_key: products_data
+            - task_key: sales_data
+          notebook_task:
+            notebook_path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/ingestion to bronze
+            source: WORKSPACE
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+
+      queue:
+        enabled: true
+
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "5"
+
+      performance_target: PERFORMANCE_OPTIMIZED
