@@ -1,0 +1,171 @@
+resources:
+  jobs:
+    master_job:
+      name: master_job
+      tasks:
+        - task_key: cat_schema
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/cat_schema.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: customer_data
+          depends_on:
+            - task_key: cat_schema
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_customers.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: products_data
+          depends_on:
+            - task_key: cat_schema
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_products.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: sales_data
+          depends_on:
+            - task_key: cat_schema
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_sales.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: suppliers_data
+          depends_on:
+            - task_key: cat_schema
+          spark_python_task:
+            python_file: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/bronze/load_suppliers.py
+            parameters:
+              - "--catalog"
+              - "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+          environment_key: Default
+
+        - task_key: ingestion_to_bronze
+          depends_on:
+            - task_key: customer_data
+            - task_key: products_data
+            - task_key: sales_data
+            - task_key: suppliers_data
+          notebook_task:
+            notebook_path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/ingestion
+              to bronze
+            source: WORKSPACE
+            base_parameters:
+              catalog: "{{job.parameters.catalog}}"
+          min_retry_interval_millis: 900000
+          disable_auto_optimization: true
+
+        - task_key: customer_clean
+          depends_on:
+            - task_key: ingestion_to_bronze
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/scd_type1_customers.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: products_scd2
+          depends_on:
+            - task_key: ingestion_to_bronze
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/scd_type2_products.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: sales_clean
+          depends_on:
+            - task_key: ingestion_to_bronze
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/Sales.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: customer_last_purchase
+          depends_on:
+            - task_key: sales_clean
+            - task_key: customer_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/customer_last_purchase.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: customer_metrics
+          depends_on:
+            - task_key: sales_clean
+            - task_key: customer_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/customer_metrics.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: daily_kpis
+          depends_on:
+            - task_key: sales_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/daily_kpis.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: sales_summary
+          depends_on:
+            - task_key: sales_clean
+            - task_key: products_scd2
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/sales_summary.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: supplier_clean
+          depends_on:
+            - task_key: ingestion_to_bronze
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/silver/suppliers.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+        - task_key: product_analytics
+          depends_on:
+            - task_key: sales_clean
+            - task_key: products_scd2
+            - task_key: supplier_clean
+          sql_task:
+            file:
+              path: /Workspace/Users/agrawaldeepak386@gmail.com/data-engineering-project/data_engineering_project/src/gold/product_analytics.sql
+              source: WORKSPACE
+            warehouse_id: 01a82f76f6f90d0a
+
+      queue:
+        enabled: true
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "5"
+      performance_target: PERFORMANCE_OPTIMIZED
