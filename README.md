@@ -112,11 +112,6 @@ bound to the `:catalog` marker used throughout the `.sql` files (see
 # authenticate to your workspace
 databricks configure
 ```
-
-Update `workspace.host` and the `root_path` user path in `databricks.yml` if
-deploying under a different account than
-`agrawaldeepak386@gmail.com`.
-
 ## Deploying
 
 ```bash
